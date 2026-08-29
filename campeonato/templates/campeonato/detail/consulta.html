@@ -1,0 +1,48 @@
+{% extends "website/modelo2.html" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'consulta-list' %}">Consultas</a></li>
+<li class="breadcrumb-item active" aria-current="page">Detalhes</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-gradient-primary text-white py-3">
+                <h4 class="mb-0 fs-5 stencil d-flex align-items-center"><i class="bi bi-calendar-check me-2 fs-4"></i>Dados da Consulta</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small uppercase fw-bold">Paciente</p>
+                        <p class="mb-0"><i class="bi bi-person me-1"></i>{{ object.paciente.nome }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small uppercase fw-bold">Profissional</p>
+                        <p class="mb-0"><i class="bi bi-person-badge me-1"></i>{{ object.profissional.nome }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small uppercase fw-bold">Data e hora</p>
+                        <p class="mb-0"><i class="bi bi-clock me-1"></i>{{ object.data_hora|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small uppercase fw-bold">Status</p>
+                        <p class="mb-0"><i class="bi bi-info-circle me-1"></i>{{ object.get_status_display }}</p>
+                    </div>
+                    <div class="col-sm-12">
+                        <p class="mb-1 text-muted small uppercase fw-bold">Observações</p>
+                        <p class="mb-0">{{ object.observacoes|default:'Sem observações.' }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">ID Sistema: #{{ object.pk }}</span>
+                <a href="#" class="btn btn-outline-secondary px-4" onclick="window.history.back()">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

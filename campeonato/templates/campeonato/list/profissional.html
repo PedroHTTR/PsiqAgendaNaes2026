@@ -1,0 +1,60 @@
+{% extends "website/modelo2.html" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Profissionais</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="section-title mb-0">Profissionais</h2>
+  <a href="{% url 'profissional-create' %}" class="btn btn-primary d-flex align-items-center gap-2">
+    <i class="bi bi-plus-lg"></i> Novo
+  </a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-4 bg-white">
+    <table class="table table-arena mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Especialidade</th>
+          <th>Registro</th>
+          <th>Status</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profissional in object_list %}
+        <tr>
+          <td>{{ profissional.pk }}</td>
+          <td>{{ profissional.nome }}</td>
+          <td>{{ profissional.especialidade }}</td>
+          <td>{{ profissional.registro|default:'-' }}</td>
+          <td>{% if profissional.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+          <td class="text-center">
+            <div class="dropdown">
+              <button class="btn btn-link btn-sm text-muted p-0" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'profissional-detail' profissional.pk %}"><i class="bi bi-eye me-2"></i>Ver</a></li>
+                <li><a class="dropdown-item" href="{% url 'profissional-update' profissional.pk %}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'profissional-delete' profissional.pk %}"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">Nenhum profissional cadastrado.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "campeonato/includes/pagination.html" %}
+{% endblock content %}

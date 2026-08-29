@@ -1,0 +1,585 @@
+from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+
+# Buscar a rota da url pelo name dela (urls.py)
+from django.urls import reverse_lazy
+
+from .models import (
+    Campus,
+    Jogador,
+    Modalidade,
+    Etapa,
+    Campeonato,
+    Inscricao,
+    Jogo,
+    Paciente,
+    Profissional,
+    Consulta,
+)
+
+# Importar o BaseLoginMixin para proteger as views
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+# Django braces faz o GroupRequiredMixin para controle de acesso por Grupo
+from braces.views import GroupRequiredMixin
+
+
+# Criar um mixin para proteger as views de cadastro, edição e exclusão
+class BaseLoginMixin(LoginRequiredMixin):
+    # define o redirecionamento caso o usuário não esteja autenticado ao acessar a view
+    login_url = reverse_lazy('login')  
+
+
+class CampusCreate(GroupRequiredMixin, CreateView):
+    group_required = ['Administrador']
+    model = Campus
+    fields = ['nome']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campus-list')
+    extra_context = {
+        'titulo': 'Cadastro de Campus',
+        'botao': 'Criar Campus'
+    }
+
+
+class CampusUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador']
+    model = Campus
+    fields = ['nome']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campus-list')
+    extra_context = {
+        'titulo': 'Editar dados do Campus',
+        'botao': 'Atualizar Campus'
+    }
+
+
+class CampusDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador']
+    model = Campus
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campus-list')
+    extra_context = {
+        'titulo': 'Excluir Campus',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class CampusList(BaseLoginMixin, ListView):
+    model = Campus
+    template_name = 'campeonato/list/campus.html'
+    paginate_by = 30
+
+
+class CampusDetail(BaseLoginMixin, DetailView):
+    model = Campus
+    template_name = 'campeonato/detail/campus.html'
+
+
+
+#########################################################
+
+
+class ModalidadeCreate(GroupRequiredMixin, CreateView):
+    group_required = ['Administrador']
+    model = Modalidade
+    fields = ['nome']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('modalidade-list')
+    extra_context = {
+        'titulo': 'Cadastro de Modalidade',
+        'botao': 'Criar Modalidade'
+    }
+
+
+class ModalidadeUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador']
+    model = Modalidade
+    fields = ['nome']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('modalidade-list')
+    extra_context = {
+        'titulo': 'Editar dados da Modalidade',
+        'botao': 'Atualizar Modalidade'
+    }
+
+
+class ModalidadeDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador']
+    model = Modalidade
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('modalidade-list')
+    extra_context = {
+        'titulo': 'Excluir Modalidade',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class ModalidadeList(BaseLoginMixin, ListView):
+    model = Modalidade
+    template_name = 'campeonato/list/modalidade.html'
+    paginate_by = 30
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["total_modalidades"] = self.get_queryset().count()
+        return context
+
+
+class ModalidadeDetail(BaseLoginMixin, DetailView):
+    model = Modalidade
+    template_name = 'campeonato/detail/modalidade.html'
+
+#########################################################
+
+
+class EtapaCreate(GroupRequiredMixin, CreateView):
+    group_required = ['Administrador']
+    model = Etapa
+    fields = ['nome', 'sequencia', 'quantidade_jogos']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('etapa-list')
+    extra_context = {
+        'titulo': 'Cadastro de Etapa',
+        'botao': 'Criar Etapa',
+        'largura': 8
+    }
+
+
+class EtapaUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador']
+    model = Etapa
+    fields = ['nome', 'sequencia', 'quantidade_jogos']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('etapa-list')
+    extra_context = {
+        'titulo': 'Editar dados da Etapa',
+        'botao': 'Atualizar Etapa'
+    }
+
+
+class EtapaDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador']
+    model = Etapa
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('etapa-list')
+    extra_context = {
+        'titulo': 'Excluir Etapa',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class EtapaList(GroupRequiredMixin, ListView):
+    group_required = ['Administrador']
+    model = Etapa
+    template_name = 'campeonato/list/etapa.html'
+    paginate_by = 30
+
+
+class EtapaDetail(GroupRequiredMixin, DetailView):
+    group_required = ['Administrador']
+    model = Etapa
+    template_name = 'campeonato/detail/etapa.html'
+
+
+class JogadorCreate(BaseLoginMixin, CreateView):
+    model = Jogador
+    fields = ['nome', 'id_jogador', 'campus', 'usuario']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogador-list')
+    extra_context = {
+        'titulo': 'Cadastro de Jogador',
+        'botao': 'Criar Jogador'
+    }
+
+
+class JogadorUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogador
+    fields = ['nome', 'id_jogador', 'campus', 'usuario']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogador-list')
+    extra_context = {
+        'titulo': 'Editar dados do Jogador',
+        'botao': 'Atualizar Jogador'
+    }
+
+
+class JogadorDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador']
+    model = Jogador
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogador-list')
+    extra_context = {
+        'titulo': 'Excluir Jogador',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class JogadorList(GroupRequiredMixin, ListView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogador
+    template_name = 'campeonato/list/jogador.html'
+    paginate_by = 30
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('campus')
+
+
+class JogadorDetail(GroupRequiredMixin, DetailView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogador
+    template_name = 'campeonato/detail/jogador.html'
+
+
+class PacienteCreate(BaseLoginMixin, CreateView):
+    model = Paciente
+    fields = ['nome', 'telefone', 'email', 'cpf', 'observacoes']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('paciente-list')
+    extra_context = {
+        'titulo': 'Cadastro de Paciente',
+        'botao': 'Criar Paciente',
+    }
+
+
+class PacienteUpdate(BaseLoginMixin, UpdateView):
+    model = Paciente
+    fields = ['nome', 'telefone', 'email', 'cpf', 'observacoes']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('paciente-list')
+    extra_context = {
+        'titulo': 'Editar dados do Paciente',
+        'botao': 'Atualizar Paciente',
+    }
+
+
+class PacienteDelete(BaseLoginMixin, DeleteView):
+    model = Paciente
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('paciente-list')
+    extra_context = {
+        'titulo': 'Excluir Paciente',
+        'botao': 'Sim, excluir!',
+    }
+
+
+class PacienteList(BaseLoginMixin, ListView):
+    model = Paciente
+    template_name = 'campeonato/list/paciente.html'
+    paginate_by = 30
+
+
+class PacienteDetail(BaseLoginMixin, DetailView):
+    model = Paciente
+    template_name = 'campeonato/detail/paciente.html'
+
+
+class ProfissionalCreate(BaseLoginMixin, CreateView):
+    model = Profissional
+    fields = ['nome', 'especialidade', 'registro', 'ativo']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('profissional-list')
+    extra_context = {
+        'titulo': 'Cadastro de Profissional',
+        'botao': 'Criar Profissional',
+    }
+
+
+class ProfissionalUpdate(BaseLoginMixin, UpdateView):
+    model = Profissional
+    fields = ['nome', 'especialidade', 'registro', 'ativo']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('profissional-list')
+    extra_context = {
+        'titulo': 'Editar dados do Profissional',
+        'botao': 'Atualizar Profissional',
+    }
+
+
+class ProfissionalDelete(BaseLoginMixin, DeleteView):
+    model = Profissional
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('profissional-list')
+    extra_context = {
+        'titulo': 'Excluir Profissional',
+        'botao': 'Sim, excluir!',
+    }
+
+
+class ProfissionalList(BaseLoginMixin, ListView):
+    model = Profissional
+    template_name = 'campeonato/list/profissional.html'
+    paginate_by = 30
+
+
+class ProfissionalDetail(BaseLoginMixin, DetailView):
+    model = Profissional
+    template_name = 'campeonato/detail/profissional.html'
+
+
+class ConsultaCreate(BaseLoginMixin, CreateView):
+    model = Consulta
+    fields = ['paciente', 'profissional', 'data_hora', 'duracao_minutos', 'status', 'observacoes']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('consulta-list')
+    extra_context = {
+        'titulo': 'Agendar Consulta',
+        'botao': 'Agendar Consulta',
+        'largura': 8,
+    }
+
+    def form_valid(self, form):
+        form.instance.criado_por = self.request.user
+        return super().form_valid(form)
+
+
+class ConsultaUpdate(BaseLoginMixin, UpdateView):
+    model = Consulta
+    fields = ['paciente', 'profissional', 'data_hora', 'duracao_minutos', 'status', 'observacoes']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('consulta-list')
+    extra_context = {
+        'titulo': 'Editar Consulta',
+        'botao': 'Atualizar Consulta',
+        'largura': 8,
+    }
+
+    def form_valid(self, form):
+        form.instance.criado_por = self.request.user
+        return super().form_valid(form)
+
+
+class ConsultaDelete(BaseLoginMixin, DeleteView):
+    model = Consulta
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('consulta-list')
+    extra_context = {
+        'titulo': 'Excluir Consulta',
+        'botao': 'Sim, excluir!',
+    }
+
+
+class ConsultaList(BaseLoginMixin, ListView):
+    model = Consulta
+    template_name = 'campeonato/list/consulta.html'
+    paginate_by = 30
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related('paciente', 'profissional')
+
+        status_filter = self.request.GET.get('status')
+        data_filter = self.request.GET.get('data')
+        busca = self.request.GET.get('busca')
+
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        if data_filter:
+            queryset = queryset.filter(data_hora__date=data_filter)
+
+        if busca:
+            queryset = queryset.filter(
+                models.Q(paciente__nome__icontains=busca) |
+                models.Q(profissional__nome__icontains=busca) |
+                models.Q(observacoes__icontains=busca)
+            )
+
+        return queryset.order_by('data_hora')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = Consulta.STATUS_CHOICES
+        context['status_atual'] = self.request.GET.get('status', '')
+        context['data_atual'] = self.request.GET.get('data', '')
+        context['busca_atual'] = self.request.GET.get('busca', '')
+        return context
+
+
+class ConsultaDetail(BaseLoginMixin, DetailView):
+    model = Consulta
+    template_name = 'campeonato/detail/consulta.html'
+
+##########################################################
+
+
+class CampeonatoCreate(GroupRequiredMixin, CreateView):
+    group_required = ['Administrador', 'Organização']
+    model = Campeonato
+    fields = ['nome', 'campus', 'data', 'data_inscricao', 'modalidades']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campeonato-list')
+    extra_context = {
+        'titulo': 'Cadastro de Campeonato',
+        'botao': 'Criar Campeonato'
+    }
+
+    def get_success_url(self):
+        # Redirecionar para a página de detalhes do campeonato criado passando seu pk/id na url
+        return reverse_lazy('campeonato-detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        # Atribuir o usuário logado ao campo 'cadastrado_por' antes de salvar o formulário
+        form.instance.cadastrado_por = self.request.user
+        
+        # Executa a criação do objeto e faz o INSERT no banco
+        url_sucesso = super().form_valid(form)
+
+        # A parti daqui consigo acessar o objeto criado através do self.object
+        # print(self.object)
+        # self.object.nome = "OK - " + self.object.nome
+        # self.object.save()  # Salva a alteração no banco
+
+        return url_sucesso
+
+
+class CampeonatoUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador', 'Organização']
+    model = Campeonato
+    fields = ['nome', 'campus', 'data', 'data_inscricao', 'modalidades', 'cadastrado_por']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campeonato-list')
+    extra_context = {
+        'titulo': 'Editar dados do Campeonato',
+        'botao': 'Atualizar Campeonato'
+    }
+
+    # queryset é uma consulta personalizada para filtrar os objetos que podem ser editados
+    def get_queryset(self):
+        return super().get_queryset().filter(cadastrado_por=self.request.user)
+
+
+class CampeonatoDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador']
+    model = Campeonato
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('campeonato-list')
+    extra_context = {
+        'titulo': 'Excluir Campeonato',
+        'botao': 'Sim, excluir!'
+    }
+
+    def get_queryset(self):
+        return super().get_queryset().filter(cadastrado_por=self.request.user)
+
+
+class CampeonatoList(ListView):
+    model = Campeonato
+    template_name = 'campeonato/list/campeonato.html'
+    paginate_by = 30
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.filter(cadastrado_por=self.request.user)
+        qs = qs.select_related('campus')
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["total_campeonatos"] = Campeonato.objects.all().count()
+        context["total_filtrado"] = self.get_queryset().count()
+        return context
+
+class CampeonatoDetail(DetailView):
+    model = Campeonato
+    template_name = 'campeonato/detail/campeonato.html'
+
+    # def get_queryset(self):
+    #     return super().get_queryset().filter(cadastrado_por=self.request.user)
+
+
+class InscricaoCreate(BaseLoginMixin, CreateView):
+    model = Inscricao
+    fields = ['nome_time', 'jogadores', 'campeonato', 'modalidade', 'inscrito_por']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('inscricao-list')
+    extra_context = {
+        'titulo': 'Cadastro de Inscrição',
+        'botao': 'Criar Inscrição'
+    }
+
+
+class InscricaoUpdate(BaseLoginMixin, UpdateView):
+    model = Inscricao
+    fields = ['nome_time', 'jogadores', 'campeonato', 'modalidade', 'confirmada', 'confirmada_em', 'inscrito_por']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('inscricao-list')
+    extra_context = {
+        'titulo': 'Editar dados da Inscrição',
+        'botao': 'Atualizar Inscrição'
+    }
+
+
+class InscricaoDelete(BaseLoginMixin, DeleteView):
+    model = Inscricao
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('inscricao-list')
+    extra_context = {
+        'titulo': 'Excluir Inscrição',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class InscricaoList(BaseLoginMixin, ListView):
+    model = Inscricao
+    template_name = 'campeonato/list/inscricao.html'
+    paginate_by = 30
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('campeonato', 'modalidade')
+
+
+class InscricaoDetail(BaseLoginMixin, DetailView):
+    model = Inscricao
+    template_name = 'campeonato/detail/inscricao.html'
+
+
+class JogoCreate(GroupRequiredMixin, CreateView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogo
+    fields = ['time_1', 'time_2', 'data_hora', 'etapa', 'modalidade', 'vencedor', 'resultado', 'cadastrado_por']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogo-list')
+    extra_context = {
+        'titulo': 'Cadastro de Jogo',
+        'botao': 'Criar Jogo'
+    }
+
+
+class JogoUpdate(GroupRequiredMixin, UpdateView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogo
+    fields = ['time_1', 'time_2', 'data_hora', 'etapa', 'modalidade', 'vencedor', 'resultado', 'cadastrado_por']
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogo-list')
+    extra_context = {
+        'titulo': 'Editar dados do Jogo',
+        'botao': 'Atualizar Jogo'
+    }
+
+
+class JogoDelete(GroupRequiredMixin, DeleteView):
+    group_required = ['Administrador', 'Organização']
+    model = Jogo
+    template_name = 'campeonato/form.html'
+    success_url = reverse_lazy('jogo-list')
+    extra_context = {
+        'titulo': 'Excluir Jogo',
+        'botao': 'Sim, excluir!'
+    }
+
+
+class JogoList(ListView):
+    model = Jogo
+    template_name = 'campeonato/list/jogo.html'
+    paginate_by = 30
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'time_1', 'time_2', 'etapa'
+        )
+
+class JogoDetail(DetailView):
+    model = Jogo
+    template_name = 'campeonato/detail/jogo.html'
