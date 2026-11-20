@@ -7,3 +7,5 @@ django-crispy-forms==2.3
 crispy-bootstrap5==2025.4
 psycopg[binary]==3.3.4
 gunicorn
+google-genai
+python-dotenv

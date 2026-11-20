@@ -6,8 +6,10 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from unittest.mock import patch
 
 from .models import Consulta, Paciente, Profissional
+from .services.gemini_client import GeminiClient
 
 
 class ConsultaSchedulingTests(TestCase):
@@ -145,3 +147,66 @@ class ConsultaSchedulingTests(TestCase):
         self.assertGreaterEqual(Paciente.objects.count(), 3)
         self.assertGreaterEqual(Profissional.objects.count(), 3)
         self.assertGreaterEqual(Consulta.objects.count(), 5)
+
+
+class GeminiClientTests(TestCase):
+    @patch("campeonato.services.gemini_client.genai.Client")
+    @patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=True)
+    def test_inicializa_cliente_com_chave_configurada(self, client_constructor):
+        gemini_client = GeminiClient()
+
+        client_constructor.assert_called_once_with(api_key="test-key")
+        self.assertIs(gemini_client.client, client_constructor.return_value)
+
+    @patch("campeonato.services.gemini_client.load_dotenv")
+    @patch.dict("os.environ", {}, clear=True)
+    def test_falha_quando_chave_nao_esta_configurada(self, _load_dotenv):
+        with self.assertRaisesRegex(RuntimeError, "GEMINI_API_KEY"):
+            GeminiClient()
+
+    @patch("campeonato.services.gemini_client.genai.Client")
+    @patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=True)
+    def test_cria_sessao_de_chat_com_modelo_padrao(self, client_constructor):
+        chat = object()
+        client_constructor.return_value.chats.create.return_value = chat
+        gemini_client = GeminiClient()
+
+        result = gemini_client.create_chat()
+
+        client_constructor.return_value.chats.create.assert_called_once_with(
+            model="gemini-3.5-flash-lite"
+        )
+        self.assertIs(result, chat)
+
+    @patch("campeonato.services.gemini_client.genai.Client")
+    @patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "test-model"},
+        clear=True,
+    )
+    def test_cria_sessao_com_modelo_da_configuracao(self, client_constructor):
+        gemini_client = GeminiClient()
+
+        gemini_client.create_chat()
+
+        client_constructor.return_value.chats.create.assert_called_once_with(
+            model="test-model"
+        )
+
+    @patch("campeonato.services.gemini_client.genai.Client")
+    @patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=True)
+    def test_envia_mensagens_sequenciais_e_retorna_texto(self, client_constructor):
+        chat = client_constructor.return_value.chats.create.return_value
+        chat.send_message.side_effect = [
+            type("Response", (), {"text": "Resposta do turno 1"}),
+            type("Response", (), {"text": "Resposta do turno 2"}),
+        ]
+        gemini_client = GeminiClient()
+        chat_session = gemini_client.create_chat()
+
+        first = gemini_client.send_message(chat_session, "Olá")
+        second = gemini_client.send_message(chat_session, "Qual projeto?")
+
+        self.assertEqual(first, "Resposta do turno 1")
+        self.assertEqual(second, "Resposta do turno 2")
+        self.assertEqual(chat.send_message.call_count, 2)

@@ -1,3 +1,4 @@
 # Arquivos compilados do Python
 *.pyc
 **/__pycache__/
+.env
