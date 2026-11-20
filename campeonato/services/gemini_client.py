@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
@@ -8,7 +9,8 @@ class GeminiClient:
     """Inicializa um cliente Gemini usando a chave configurada no ambiente."""
 
     def __init__(self) -> None:
-        load_dotenv()
+        base_dir = Path(__file__).resolve().parents[2]
+        load_dotenv(base_dir / ".env")
 
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:

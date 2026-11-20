@@ -149,6 +149,126 @@ class ConsultaSchedulingTests(TestCase):
         self.assertGreaterEqual(Consulta.objects.count(), 5)
 
 
+class DjangoFilterTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='filtro',
+            password='12345678',
+        )
+        self.client.force_login(self.user)
+
+    def test_paciente_filtra_por_nome_e_cpf_em_combinacao(self):
+        ana = Paciente.objects.create(
+            nome='Ana Souza',
+            telefone='11911111111',
+            email='ana@example.com',
+            cpf='11111111111',
+        )
+        Paciente.objects.create(
+            nome='Ana Costa',
+            telefone='11922222222',
+            email='ana.costa@example.com',
+            cpf='22222222222',
+        )
+
+        response = self.client.get(
+            reverse('paciente-list'),
+            {'nome': 'Souza', 'cpf': '111111'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('filter', response.context)
+        self.assertQuerySetEqual(response.context['object_list'], [ana])
+
+    def test_profissional_filtra_nome_especialidade_e_ativo(self):
+        ativo = Profissional.objects.create(
+            nome='Dra. Helena Lima',
+            especialidade='Psicologia',
+            registro='CRP-123',
+            ativo=True,
+        )
+        Profissional.objects.create(
+            nome='Dr. Paulo Lima',
+            especialidade='Psiquiatria',
+            registro='CRM-123',
+            ativo=False,
+        )
+
+        response = self.client.get(
+            reverse('profissional-list'),
+            {'nome': 'Helena', 'especialidade': 'Psico', 'ativo': 'true'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context['object_list'], [ativo])
+
+    def test_consulta_combina_status_profissional_e_busca(self):
+        paciente = Paciente.objects.create(
+            nome='Marina Dias',
+            telefone='11933333333',
+            cpf='33333333333',
+        )
+        profissional = Profissional.objects.create(
+            nome='Dr. Miguel Nunes',
+            especialidade='Psiquiatria',
+            ativo=True,
+        )
+        outro_profissional = Profissional.objects.create(
+            nome='Dra. Bia',
+            especialidade='Psicologia',
+            ativo=True,
+        )
+        consulta = Consulta.objects.create(
+            paciente=paciente,
+            profissional=profissional,
+            data_hora=timezone.now().replace(hour=14, minute=0, second=0, microsecond=0) + timedelta(days=2),
+            duracao_minutos=50,
+            status='CONFIRMADA',
+            observacoes='Retorno urgente',
+            criado_por=self.user,
+        )
+        Consulta.objects.create(
+            paciente=paciente,
+            profissional=outro_profissional,
+            data_hora=timezone.now().replace(hour=15, minute=0, second=0, microsecond=0) + timedelta(days=2),
+            duracao_minutos=50,
+            status='AGENDADA',
+            observacoes='Retorno urgente',
+            criado_por=self.user,
+        )
+
+        response = self.client.get(
+            reverse('consulta-list'),
+            {
+                'status': 'CONFIRMADA',
+                'profissional': str(profissional.pk),
+                'busca': 'Marina',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context['object_list'], [consulta])
+
+    def test_paginacao_mantem_parametros_get(self):
+        for index in range(31):
+            Paciente.objects.create(
+                nome=f'Paciente {index}',
+                telefone=f'119{index:08d}',
+                cpf=f'{index:011d}',
+            )
+
+        response = self.client.get(
+            reverse('paciente-list'),
+            {'nome': 'Paciente', 'page': '2'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_paginated'])
+        self.assertEqual(response.context['page_obj'].number, 2)
+        self.assertContains(response, 'nome=Paciente')
+        self.assertContains(response, 'page=1')
+
+
 class GeminiClientTests(TestCase):
     @patch("campeonato.services.gemini_client.genai.Client")
     @patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=True)

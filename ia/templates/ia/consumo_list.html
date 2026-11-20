@@ -1,0 +1,16 @@
+{% extends "website/modelo2.html" %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Consumo de IA</li>{% endblock breadcrumb %}
+{% block content %}
+<h2 class="section-title mb-4">Consumo de IA</h2>
+<div class="card shadow-sm"><div class="card-body">
+<table class="table table-arena mb-0">
+  <thead><tr><th>Usuário</th><th>Modelo</th><th>Entrada</th><th>Saída</th><th>Total</th><th>Data</th></tr></thead>
+  <tbody>
+  {% for consumo in object_list %}
+  <tr><td>{{ consumo.usuario }}</td><td>{{ consumo.modelo }}</td><td>{{ consumo.tokens_entrada }}</td><td>{{ consumo.tokens_saida }}</td><td>{{ consumo.tokens_total }}</td><td>{{ consumo.criado_em|date:"d/m/Y H:i" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum consumo registrado.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock content %}

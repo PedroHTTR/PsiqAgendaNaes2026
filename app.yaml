@@ -12,6 +12,5 @@ automatic_scaling:
   min_instances: 0
   max_instances: 2
 
-# Configurações de ambiente para o Django
-env_variables:
-  NOME_DA_VARIAVEL: "Valor recebido"
+# Configure SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL and Gemini
+# variables in the deployment environment, not in this file.

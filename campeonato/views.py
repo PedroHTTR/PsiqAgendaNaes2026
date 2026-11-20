@@ -1,6 +1,7 @@
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from django_filters.views import FilterView
 
 # Buscar a rota da url pelo name dela (urls.py)
 from django.urls import reverse_lazy
@@ -23,6 +24,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Django braces faz o GroupRequiredMixin para controle de acesso por Grupo
 from braces.views import GroupRequiredMixin
+from .filters import ConsultaFilter, PacienteFilter, ProfissionalFilter
 
 
 # Criar um mixin para proteger as views de cadastro, edição e exclusão
@@ -265,10 +267,14 @@ class PacienteDelete(BaseLoginMixin, DeleteView):
     }
 
 
-class PacienteList(BaseLoginMixin, ListView):
+class PacienteList(BaseLoginMixin, FilterView):
     model = Paciente
+    filterset_class = PacienteFilter
     template_name = 'campeonato/list/paciente.html'
     paginate_by = 30
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('nome', 'pk')
 
 
 class PacienteDetail(BaseLoginMixin, DetailView):
@@ -308,10 +314,14 @@ class ProfissionalDelete(BaseLoginMixin, DeleteView):
     }
 
 
-class ProfissionalList(BaseLoginMixin, ListView):
+class ProfissionalList(BaseLoginMixin, FilterView):
     model = Profissional
+    filterset_class = ProfissionalFilter
     template_name = 'campeonato/list/profissional.html'
     paginate_by = 30
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('nome', 'pk')
 
 
 class ProfissionalDetail(BaseLoginMixin, DetailView):
@@ -361,40 +371,14 @@ class ConsultaDelete(BaseLoginMixin, DeleteView):
     }
 
 
-class ConsultaList(BaseLoginMixin, ListView):
+class ConsultaList(BaseLoginMixin, FilterView):
     model = Consulta
+    filterset_class = ConsultaFilter
     template_name = 'campeonato/list/consulta.html'
     paginate_by = 30
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('paciente', 'profissional')
-
-        status_filter = self.request.GET.get('status')
-        data_filter = self.request.GET.get('data')
-        busca = self.request.GET.get('busca')
-
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
-
-        if data_filter:
-            queryset = queryset.filter(data_hora__date=data_filter)
-
-        if busca:
-            queryset = queryset.filter(
-                models.Q(paciente__nome__icontains=busca) |
-                models.Q(profissional__nome__icontains=busca) |
-                models.Q(observacoes__icontains=busca)
-            )
-
-        return queryset.order_by('data_hora')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['status_choices'] = Consulta.STATUS_CHOICES
-        context['status_atual'] = self.request.GET.get('status', '')
-        context['data_atual'] = self.request.GET.get('data', '')
-        context['busca_atual'] = self.request.GET.get('busca', '')
-        return context
+        return super().get_queryset().select_related('paciente', 'profissional').order_by('data_hora')
 
 
 class ConsultaDetail(BaseLoginMixin, DetailView):
